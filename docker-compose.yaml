@@ -1,0 +1,47 @@
+services:
+  php:
+    container_name: php_${PROJECT_NAME}
+    build:
+      context: ./docker/php
+    image: ${PROJECT_NAME}-php:local
+    working_dir: ${WORKDIR}
+    environment:
+      WORKDIR: ${WORKDIR}
+      PHP_IDE_CONFIG: serverName=docker
+      # інтеграційні тести шукають брокер тут; юніт-тести його не чіпають
+      KAFKA_DSN: kafka://kafka:9092
+    volumes:
+      - ./:${WORKDIR}
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # Один вузол у режимі KRaft: тестам не потрібен кворум, потрібен брокер.
+  kafka:
+    container_name: kafka_${PROJECT_NAME}
+    image: apache/kafka:3.9.0
+    ports:
+      - 127.0.0.1:${KAFKA_PORT:-29092}:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,HOST://localhost:${KAFKA_PORT:-29092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Реплікація одиницею: вузол один, а з дефолтними трьома службові топіки
+      # не створюються й споживач мовчки висить.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: messenger-kafka-tests
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 15s

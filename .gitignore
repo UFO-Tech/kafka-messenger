@@ -1,0 +1,11 @@
+/vendor/
+/build/
+/var/
+/.phpunit.cache
+.phpunit.result.cache
+/phpunit.xml
+/composer.lock
+/MakefileCustom
+.idea
+.DS_Store
+.mcp.json

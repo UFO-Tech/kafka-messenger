@@ -1,0 +1,53 @@
+{
+    "name": "ufo-tech/kafka-messenger",
+    "type": "symfony-bundle",
+    "description": "Kafka transport for Symfony Messenger, built directly on librdkafka: one DSN per environment, confirmed delivery and partition keys.",
+    "keywords": [
+        "kafka",
+        "symfony",
+        "messenger",
+        "transport",
+        "rdkafka"
+    ],
+    "homepage": "https://github.com/UFO-Tech/kafka-messenger",
+    "support": {
+        "issues": "https://github.com/UFO-Tech/kafka-messenger/issues",
+        "source": "https://github.com/UFO-Tech/kafka-messenger"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Valentyn Nikolaiev",
+            "email": "valiknik225@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-rdkafka": "*",
+        "psr/log": "^2.0||^3.0",
+        "symfony/config": "^7.3||^8.0",
+        "symfony/dependency-injection": "^7.3||^8.0",
+        "symfony/http-kernel": "^7.3||^8.0",
+        "symfony/messenger": "^7.3||^8.0"
+    },
+    "require-dev": {
+        "kwn/php-rdkafka-stubs": "^3.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ufo\\KafkaMessenger\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ufo\\KafkaMessenger\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
