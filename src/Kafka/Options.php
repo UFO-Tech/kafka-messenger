@@ -31,7 +31,7 @@ readonly class Options
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public static function fromDsn(string $dsn, array $options): self
+    public static function fromDsn(string $dsn, array $options, bool $strict = true): self
     {
         $parsed = Dsn::parse($dsn);
         $options = $parsed->options + $options;
@@ -40,7 +40,9 @@ readonly class Options
             $options[TransportOption::Topic->value] = $parsed->topic;
         }
 
-        self::assertKnown($options);
+        if ($strict) {
+            self::assertKnown($options);
+        }
 
         $topic = $options[TransportOption::Topic->value] ?? null;
         if (!\is_string($topic) || '' === $topic) {

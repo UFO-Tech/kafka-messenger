@@ -35,14 +35,27 @@ final class UfoKafkaMessengerBundleTest extends TestCase
         self::assertInstanceOf(KafkaTransportFactory::class, $container->get(KafkaTransportFactory::class));
     }
 
-    private static function loaded(): ContainerBuilder
+    public function testOptionsAreNotStrictByDefault(): void
+    {
+        self::assertFalse(self::loaded()->getDefinition(KafkaTransportFactory::class)->getArgument('$strict'));
+    }
+
+    public function testStrictOptionsAreSwitchedOnByConfig(): void
+    {
+        $container = self::loaded(['strict_options' => true]);
+
+        self::assertTrue($container->getDefinition(KafkaTransportFactory::class)->getArgument('$strict'));
+    }
+
+    /** @param array<string, mixed> $config */
+    private static function loaded(array $config = []): ContainerBuilder
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.environment', 'test');
         $container->setParameter('kernel.debug', false);
         $container->setParameter('kernel.build_dir', sys_get_temp_dir());
 
-        (new UfoKafkaMessengerBundle())->getContainerExtension()?->load([], $container);
+        (new UfoKafkaMessengerBundle())->getContainerExtension()?->load([$config], $container);
 
         return $container;
     }

@@ -7,6 +7,7 @@ namespace Ufo\KafkaMessenger\Tests\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Messenger\Exception\LogicException;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 use Ufo\KafkaMessenger\Kafka\ClientFactory;
 use Ufo\KafkaMessenger\Transport\KafkaTransport;
@@ -46,8 +47,38 @@ final class KafkaTransportFactoryTest extends TestCase
         self::assertInstanceOf(KafkaTransport::class, $transport);
     }
 
-    private static function factory(): KafkaTransportFactory
+    public function testUnknownOptionIsIgnoredByDefault(): void
     {
-        return new KafkaTransportFactory(new ClientFactory());
+        $transport = self::factory()->createTransport(
+            'kafka://broker:9092/events?flushTimeout=1000',
+            ['retries' => 3],
+            new PhpSerializer(),
+        );
+
+        self::assertInstanceOf(KafkaTransport::class, $transport);
+    }
+
+    public function testStrictFactoryRefusesUnknownOption(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('retries');
+
+        self::factory(strict: true)->createTransport('kafka://broker:9092/events', ['retries' => 3], new PhpSerializer());
+    }
+
+    public function testStrictFactoryAcceptsTransportNameAddedByFrameworkBundle(): void
+    {
+        $transport = self::factory(strict: true)->createTransport(
+            'kafka://broker:9092/events',
+            ['transport_name' => 'events'],
+            new PhpSerializer(),
+        );
+
+        self::assertInstanceOf(KafkaTransport::class, $transport);
+    }
+
+    private static function factory(bool $strict = false): KafkaTransportFactory
+    {
+        return new KafkaTransportFactory(new ClientFactory(), strict: $strict);
     }
 }

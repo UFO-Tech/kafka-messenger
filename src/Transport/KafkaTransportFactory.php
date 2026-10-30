@@ -22,6 +22,7 @@ final readonly class KafkaTransportFactory implements TransportFactoryInterface
     public function __construct(
         private ClientFactory $clients,
         ?LoggerInterface $logger = null,
+        private bool $strict = false,
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -29,7 +30,8 @@ final readonly class KafkaTransportFactory implements TransportFactoryInterface
     /** @param array<string, mixed> $options */
     public function createTransport(#[\SensitiveParameter] string $dsn, array $options, SerializerInterface $serializer): TransportInterface
     {
-        $parsed = Options::fromDsn($dsn, $options);
+        unset($options['transport_name']);
+        $parsed = Options::fromDsn($dsn, $options, $this->strict);
         $connection = new Connection($parsed, $this->clients, $this->logger);
 
         return new KafkaTransport(

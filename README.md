@@ -51,7 +51,14 @@ framework:
                         auto.offset.reset: 'earliest'
 ```
 
-Any other key stops the transport at startup and the error names the ones it accepts. Values in `kafka_conf` are turned into strings for you, so a YAML `false` reaches librdkafka as `"false"` rather than as an empty value.
+Any other key is ignored. To have it stop the transport at startup instead, with an error naming the keys it accepts, switch strict mode on:
+
+```yaml
+ufo_kafka_messenger:
+    strict_options: true
+```
+
+Values in `kafka_conf` are turned into strings for you, so a YAML `false` reaches librdkafka as `"false"` rather than as an empty value.
 
 A consumer needs `group.id`: without it there is nowhere to keep the offset, and the transport says so instead of letting librdkafka abort. `enable.auto.commit` is set to `false` unless you choose otherwise — with auto-commit on, a background thread moves the offset and neither `ack` nor `reject` decides anything any more.
 
